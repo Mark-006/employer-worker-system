@@ -166,6 +166,10 @@ public class Price implements Serializable{
 				&& Objects.equals(halftime, other.halftime) && id == other.id
 				&& Objects.equals(overtime, other.overtime);
 	}
+
+    public int getPriceId() {
+       return id;
+    }
 	
 	
 	

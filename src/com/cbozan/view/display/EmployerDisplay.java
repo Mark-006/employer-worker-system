@@ -89,19 +89,22 @@ public class EmployerDisplay extends JPanel implements Observer{
 			private static final long serialVersionUID = 1L;
 			@Override
 			public void mouseAction(MouseEvent e, Object searchResultObject, int chooseIndex) {
-				selectedEmployer = (Employer) searchResultObject;
-				employerCard.setSelectedEmployer(selectedEmployer.clone());
-				
-				employerSearchBox.setText(selectedEmployer.toString());
-				employerSearchBox.setEditable(false);
-				
-				updateJobTableData();
-				updateEmployerPaymentTableData();
-				
-				employerPaymentJobFilterSearchBox.setObjectList(JobDAO.getInstance().list(selectedEmployer));
+				if (searchResultObject instanceof Employer) {
+					selectedEmployer = (Employer) searchResultObject;
+					employerCard.setSelectedEmployer(selectedEmployer);
+					
+					employerSearchBox.setText(selectedEmployer.toString());
+					employerSearchBox.setEditable(false);
+					
+					updateJobTableData();
+					updateEmployerPaymentTableData();
+					
+					employerPaymentJobFilterSearchBox.setObjectList(JobDAO.getInstance().list(selectedEmployer));
+				}
 				
 				super.mouseAction(e, searchResultObject, chooseIndex);
 			}
+			
 		};
 		employerSearchBox.setBounds(RLX, employerSearchBoxImageLabel.getY() + employerSearchBoxImageLabel.getHeight(), RLW, RLH);
 		this.add(employerSearchBox);
@@ -262,7 +265,7 @@ public class EmployerDisplay extends JPanel implements Observer{
 		
 		if(selectedEmployer != null) {
 			
-			List<Invoice> invoiceList = InvoiceDAO.getInstance().list(selectedEmployer);
+			List<Invoice> invoiceList = InvoiceDAO.getInstance().list();
 			filterPaymentJob(invoiceList);
 			
 			String[][] tableData = new String[invoiceList.size()][employerPaymentTableColumns.length];

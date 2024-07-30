@@ -3,7 +3,6 @@ package com.cbozan.view.record;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +23,7 @@ import com.cbozan.view.component.RecordTextField;
 import com.cbozan.view.helper.Control;
 import com.cbozan.view.helper.Observer;
 
-public class PricePanel extends JPanel implements Observer, Serializable, ActionListener{
+public class PricePanel extends JPanel implements Observer, ActionListener{
 	
 	private static final long serialVersionUID = 1L;
 

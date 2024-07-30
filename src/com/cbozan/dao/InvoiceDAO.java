@@ -43,13 +43,13 @@ public class InvoiceDAO {
 	}
 	
 	
-	public List<Invoice> list(Employer employer){
+	public List<Invoice> list(Employer employer, Object Invoice){
 
 		List<Invoice> invoiceList = new ArrayList<>();
 		Connection conn;
 		Statement st;
 		ResultSet rs;
-		String query = "SELECT * FROM invoice WHERE job_id IN (SELECT id FROM job WHERE employer_id=" + employer.getId() + ")";
+		String query = "SELECT * FROM invoice WHERE job_id IN (SELECT id FROM job WHERE employer_id=" + (((com.cbozan.entity.Invoice) Invoice)).getId() + ")";
 		
 		try {
 			conn = DB.getConnection();

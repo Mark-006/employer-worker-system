@@ -49,9 +49,11 @@ public class MainFrame extends JFrame implements ActionListener{
 	private JMenuItem newWorkItem, newWorkerPaymentItem, newEmployerPaymentItem;
 	private JMenuItem displayWorkerItem, displayEmployerItem, displayJobItem;
 	private List<Observer> components;
+    
 	
 	public MainFrame() {
 		this(0);
+	
 	}
 	
 	public MainFrame(int component) {
@@ -177,7 +179,7 @@ public class MainFrame extends JFrame implements ActionListener{
 		EmployerDisplay employerDisplay = new EmployerDisplay();
 		
 		components = new ArrayList<>();
-		components.add(job);
+		components.add(NEW_EMPLOYER_ACTION_COMMAND, job);
 		components.add(worker);
 		components.add(employer);
 		components.add(price);

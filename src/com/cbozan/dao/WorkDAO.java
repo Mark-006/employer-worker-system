@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.StringTokenizer;
 
 import javax.swing.JOptionPane;
@@ -22,367 +21,254 @@ import com.cbozan.entity.Worker;
 import com.cbozan.exception.EntityException;
 
 public class WorkDAO {
-	
-	private final HashMap<Integer, Work> cache = new HashMap<>();
-	private boolean usingCache = true;
-	
-	private WorkDAO() {list();}
-	
-	// Read by id
-	public Work findById(int id) {
-		
-		if(usingCache == false)
-			list();
-		
-		if(cache.containsKey(id))
-			return cache.get(id);
-		return null;
-		
-	}
-	
-	public void refresh() {
-		setUsingCache(false);
-		list();
-		setUsingCache(true);
-	}
-	
-	public List<Work> list(Worker worker, String dateStrings){
-		List<Work> workList = new ArrayList<>();
-		String query = "SELECT * FROM work WHERE worker_id=" + worker.getId();
-		String guiDatePattern = "dd/MM/yyyy";
-		String dbDatePattern = "yyyy-MM-dd";
-		
-		StringTokenizer tokenizer = new StringTokenizer(dateStrings, "-");
-		
-		if(tokenizer.countTokens() == 1) {
-			
-			Date d1;
-			try {
-				d1 = new SimpleDateFormat(guiDatePattern).parse(tokenizer.nextToken());
-				String date1 = new SimpleDateFormat(dbDatePattern).format(d1);
-				d1.setTime(d1.getTime() + 86400000L);
-				String date2 = new SimpleDateFormat(dbDatePattern).format(d1);
-				query = "SELECT * FROM work WHERE worker_id=" + worker.getId() + " AND date >= '" + date1 + "' AND date <= '" + date2 + "';";
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			
-			
-		} else if(tokenizer.countTokens() == 2) {
-			Date d1;
-			try {
-				 d1 = new SimpleDateFormat(guiDatePattern).parse(tokenizer.nextToken());
-				 String date1 = new SimpleDateFormat(dbDatePattern).format(d1);
-				 d1 = new SimpleDateFormat(guiDatePattern).parse(tokenizer.nextToken());
-				 d1.setTime(d1.getTime() + 86400000L);
-				 String date2 = new SimpleDateFormat(dbDatePattern).format(d1);
-				 query = "SELECT * FROM work WHERE worker_id=" + worker.getId() + " AND date >= '" + date1 + "' AND date <= '" + date2 + "';";
-			} catch (ParseException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} else {
-			//query = "SELECT * FROM work WHERE worker_id=" + worker.getId();
-			return workList;
-		}
-		
-		System.out.println("query : " + query);
-		Connection conn;
-		Statement st;
-		ResultSet rs;
-		
-		try {
-			conn = DB.getConnection();
-			st = conn.createStatement();
-			rs = st.executeQuery(query);
-			
-			WorkBuilder builder = new WorkBuilder();
-			Work work;
-			
-			while(rs.next()) {
-				
-				work = findById(rs.getInt("id"));
-				if(work != null) { // cache control
-					workList.add(work);
-				} else {
-					
-					builder.setId(rs.getInt("id"));
-					builder.setJob_id(rs.getInt("job_id"));
-					builder.setWorker_id(rs.getInt("worker_id"));
-					builder.setWorktype_id(rs.getInt("worktype_id"));
-					builder.setWorkgroup_id(rs.getInt("workgroup_id"));
-					builder.setDescription(rs.getString("description"));
-					builder.setDate(rs.getTimestamp("date"));
-					
-					try {
-						work = builder.build();
-						workList.add(work);
-						cache.put(work.getId(), work);
-					} catch (EntityException e) {
-						e.printStackTrace();
-					}
-					
-				}
-			
-			}
-			
-		} catch(SQLException sqle) {
-			
-		}
-		
-		return workList;
-		
-	}
-	
-	public List<Work> list(Worker worker){
-		
-		List<Work> workList = new ArrayList<>();
-		Connection conn;
-		Statement st;
-		ResultSet rs;
-		String query = "SELECT * FROM work WHERE worker_id=" + worker.getId();
-		
-		try {
-			conn = DB.getConnection();
-			st = conn.createStatement();
-			rs = st.executeQuery(query);
-			
-			WorkBuilder builder = new WorkBuilder();
-			Work work;
-			
-			while(rs.next()) {
-				
-				work = findById(rs.getInt("id"));
-				if(work != null) { // cache control
-					workList.add(work);
-				} else {
-					
-					builder.setId(rs.getInt("id"));
-					builder.setJob_id(rs.getInt("job_id"));
-					builder.setWorker_id(rs.getInt("worker_id"));
-					builder.setWorktype_id(rs.getInt("worktype_id"));
-					builder.setWorkgroup_id(rs.getInt("workgroup_id"));
-					builder.setDescription(rs.getString("description"));
-					builder.setDate(rs.getTimestamp("date"));
-					
-					try {
-						work = builder.build();
-						workList.add(work);
-						cache.put(work.getId(), work);
-					} catch (EntityException e) {
-						e.printStackTrace();
-					}
-					
-				}
-			
-			}
-			
-		} catch(SQLException sqle) {
-			sqle.printStackTrace();
-		}
-		
-		return workList;
-		
-	}
-	
-	
-	
-	//Read All
-	public List<Work> list(){
-		
-		List<Work> list = new ArrayList<>();
-		
-		if(cache.size() != 0 && usingCache) {
-			for(Entry<Integer, Work> obj : cache.entrySet()) {
-				list.add(obj.getValue());
-			}
-			
-			return list;
-		}
-		
-		cache.clear();
-		
-		Connection conn;
-		Statement st;
-		ResultSet rs;
-		String query = "SELECT * FROM work;";
-		
-		try {
-			conn = DB.getConnection();
-			st = conn.createStatement();
-			rs = st.executeQuery(query);
-			
-			WorkBuilder builder;
-			Work work;
-			
-			while(rs.next()) {
-				
-				builder = new WorkBuilder();
-				builder.setId(rs.getInt("id"));
-				builder.setJob_id(rs.getInt("job_id"));
-				builder.setWorker_id(rs.getInt("worker_id"));
-				builder.setWorktype_id(rs.getInt("worktype_id"));
-				builder.setWorkgroup_id(rs.getInt("workgroup_id"));
-				builder.setDescription(rs.getString("description"));
-				builder.setDate(rs.getTimestamp("date"));
-				
-				try {
-					work = builder.build();
-					list.add(work);
-					cache.put(work.getId(), work);
-				} catch (EntityException e) {
-					showEntityException(e, "ID : " + rs.getInt("id"));
-				}
-				
-			}
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return list;
-	}
-	
-	
-	public boolean create(Work work) {
-		
-		Connection conn;
-		PreparedStatement pst;
-		int result = 0;
-		String query = "INSERT INTO work (job_id,worker_id,worktype_id,workgroup_id,description) VALUES (?,?,?,?,?);";
-		String query2 = "SELECT * FROM work ORDER BY id DESC LIMIT 1;";
-		
-		try {
-			conn = DB.getConnection();
-			pst = conn.prepareStatement(query);
-			pst.setInt(1, work.getJob().getId());
-			pst.setInt(2, work.getWorker().getId());
-			pst.setInt(3, work.getWorktype().getId());
-			pst.setInt(4, work.getWorkgroup().getId());
-			pst.setString(5, work.getDescription());
-			
-			result = pst.executeUpdate();
-			
-			if(result != 0) {
-				
-				ResultSet rs = conn.createStatement().executeQuery(query2);
-				while(rs.next()) {
-					
-					WorkBuilder builder = new WorkBuilder();
-					builder.setId(rs.getInt("id"));
-					builder.setJob_id(rs.getInt("job_id"));
-					builder.setWorker_id(rs.getInt("worker_id"));
-					builder.setWorktype_id(rs.getInt("worktype_id"));
-					builder.setWorkgroup_id(rs.getInt("workgroup_id"));
-					builder.setDescription(rs.getString("description"));
-					builder.setDate(rs.getTimestamp("date"));
-					
-					try {
-						Work w = builder.build();
-						cache.put(w.getId(), w);
-					} catch (EntityException e) {
-						showEntityException(e, "ID : " + rs.getInt("id"));
-					}
-					
-				}
-				
-			}
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return result == 0 ? false : true;
-	}
-	
-	
-	public boolean update(Work work) {
-		
-		Connection conn;
-		PreparedStatement pst;
-		int result = 0;
-		String query = "UPDATE work SET job_id=?,"
-				+ "worker_id=?, worktype_id=?, workgroup_id=?, description=? WHERE id=?;";
-		
-		try {
-			conn = DB.getConnection();
-			pst = conn.prepareStatement(query);
-			pst.setInt(1, work.getJob().getId());
-			pst.setInt(2, work.getWorker().getId());
-			pst.setInt(3, work.getWorktype().getId());
-			pst.setInt(4, work.getWorkgroup().getId());
-			pst.setString(5, work.getDescription());
-			pst.setInt(6, work.getId());
-			
-			result = pst.executeUpdate();
-			
-			if(result != 0) {
-				cache.put(work.getId(), work);
-			}
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return result == 0 ? false : true;
-	}
-	
-	
-	public boolean delete(Work work) {
-		
-		Connection conn;
-		PreparedStatement ps;
-		int result = 0;
-		String query = "DELETE FROM work WHERE id=?;";
-		
-		try {
-			
-			conn = DB.getConnection();
-			ps = conn.prepareStatement(query);
-			ps.setInt(1, work.getId());
-			
-			result = ps.executeUpdate();
-			
-			if(result != 0) {
-				cache.remove(work.getId());
-			}
 
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return result == 0 ? false : true;
-		
-	}
-	
-	
-	private static class WorkDAOHelper {
-		private static final WorkDAO instance = new WorkDAO();
-	}
-	
-	public static WorkDAO getInstance() {
-		return WorkDAOHelper.instance;
-	}
+    private final HashMap<Integer, Work> cache = new HashMap<>();
+    private boolean usingCache = true;
 
-	public boolean isUsingCache() { // isUsingCache??
-		return usingCache;
-	}
+    private WorkDAO() {
+        list();
+    }
 
-	public void setUsingCache(boolean usingCache) {
-		this.usingCache = usingCache;
+    private static class WorkDAOHelper {
+        private static final WorkDAO INSTANCE = new WorkDAO();
+    }
+
+    public static WorkDAO getInstance() {
+        return WorkDAOHelper.INSTANCE;
+    }
+
+    public Work findById(int id) {
+        if (!usingCache) {
+            list();
+        }
+
+        return cache.get(id);
+    }
+
+    public void refresh() {
+        setUsingCache(false);
+        list();
+        setUsingCache(true);
+    }
+
+    public List<Work> list(Worker worker, String dateStrings) {
+        List<Work> workList = new ArrayList<>();
+        String query = generateQueryForWorkerAndDate(worker.getId(), dateStrings);
+
+        if (query.isEmpty()) {
+            return workList;
+        }
+
+        try (Connection conn = DB.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+
+            WorkBuilder builder = new WorkBuilder();
+            while (rs.next()) {
+                Work work = findById(rs.getInt("id"));
+                if (work != null) {
+                    workList.add(work);
+                } else {
+                    work = buildWorkFromResultSet(rs, builder);
+                    if (work != null) {
+                        workList.add(work);
+                        cache.put(work.getId(), work);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            showSQLException(e);
+        }
+
+        return workList;
+    }
+
+    public List<Work> list(Worker worker) {
+        return list(worker, "");
+    }
+
+    public List<Work> list() {
+        List<Work> list = new ArrayList<>();
+        if (!usingCache) {
+            cache.clear();
+        }
+
+        if (!cache.isEmpty() && usingCache) {
+            list.addAll(cache.values());
+            return list;
+        }
+
+        String query = "SELECT * FROM work;";
+
+        try (Connection conn = DB.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery(query)) {
+
+            WorkBuilder builder = new WorkBuilder();
+            while (rs.next()) {
+                Work work = buildWorkFromResultSet(rs, builder);
+                if (work != null) {
+                    list.add(work);
+                    cache.put(work.getId(), work);
+                }
+            }
+        } catch (SQLException e) {
+            showSQLException(e);
+        }
+
+        return list;
+    }
+
+    public boolean create(Work work) {
+        String query = "INSERT INTO work (job_id, worker_id, worktype_id, workgroup_id, description) VALUES (?, ?, ?, ?, ?);";
+        String query2 = "SELECT * FROM work ORDER BY id DESC LIMIT 1;";
+
+        try (Connection conn = DB.getConnection();
+             PreparedStatement pst = conn.prepareStatement(query)) {
+
+            setWorkPreparedStatement(pst, work);
+
+            int result = pst.executeUpdate();
+            if (result > 0) {
+                try (ResultSet rs = conn.createStatement().executeQuery(query2)) {
+                    if (rs.next()) {
+                        Work newWork = buildWorkFromResultSet(rs, new WorkBuilder());
+                        if (newWork != null) {
+                            cache.put(newWork.getId(), newWork);
+                        }
+                    }
+                }
+                return true;
+            }
+        } catch (SQLException e) {
+            showSQLException(e);
+        }
+        return false;
+    }
+
+    public boolean update(Work work) {
+        String query = "UPDATE work SET job_id=?, worker_id=?, worktype_id=?, workgroup_id=?, description=? WHERE id=?;";
+
+        try (Connection conn = DB.getConnection();
+             PreparedStatement pst = conn.prepareStatement(query)) {
+
+            setWorkPreparedStatement(pst, work);
+            pst.setInt(6, work.getId());
+
+            int result = pst.executeUpdate();
+            if (result > 0) {
+                cache.put(work.getId(), work);
+                return true;
+            }
+        } catch (SQLException e) {
+            showSQLException(e);
+        }
+        return false;
+    }
+
+    public boolean delete(Work work) {
+        String query = "DELETE FROM work WHERE id=?;";
+
+        try (Connection conn = DB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(query)) {
+
+            ps.setInt(1, work.getId());
+
+            int result = ps.executeUpdate();
+            if (result > 0) {
+                cache.remove(work.getId());
+                return true;
+            }
+        } catch (SQLException e) {
+            showSQLException(e);
+        }
+        return false;
+    }
+
+    public boolean isUsingCache() {
+        return usingCache;
+    }
+
+    public void setUsingCache(boolean usingCache) {
+        this.usingCache = usingCache;
+    }
+
+    private void setWorkPreparedStatement(PreparedStatement pst, Work work) throws SQLException {
+        pst.setInt(1, work.getJob().getId());
+        pst.setInt(2, work.getWorker().getId());
+        pst.setInt(3, work.getWorktype().getId());
+        // Assuming workgroup_id is part of Work class, adjust accordingly
+        pst.setInt(4, work.getWorkgroup().getId());
+        pst.setString(5, work.getDescription());
+    }
+
+    private Work buildWorkFromResultSet(ResultSet rs, WorkBuilder builder) {
+        try {
+            builder.setId(rs.getInt("id"));
+            builder.setJob_id(rs.getInt("job_id"));
+            builder.setWorker_id(rs.getInt("worker_id"));
+            builder.setWorktype_id(rs.getInt("worktype_id"));
+            // Adjust for workgroup_id and other fields as necessary
+            builder.setWorkgroup_id(rs.getInt("workgroup_id"));
+            builder.setDescription(rs.getString("description"));
+            builder.setDate(rs.getTimestamp("date"));
+            return builder.build();
+        } catch (SQLException | EntityException e) {
+            try {
+				showEntityException(e, "ID : " + rs.getInt("id"));
+			} catch (SQLException e1) {
+				
+				e1.printStackTrace();
+			}
+        }
+        return null;
+    }
+
+    private String generateQueryForWorkerAndDate(int workerId, String dateStrings) {
+        StringBuilder query = new StringBuilder("SELECT * FROM work WHERE worker_id=" + workerId);
+        StringTokenizer tokenizer = new StringTokenizer(dateStrings, "-");
+
+        if (tokenizer.countTokens() == 1) {
+            try {
+                Date date1 = new SimpleDateFormat("dd/MM/yyyy").parse(tokenizer.nextToken());
+                String formattedDate1 = new SimpleDateFormat("yyyy-MM-dd").format(date1);
+                date1.setTime(date1.getTime() + 86400000L);
+                String formattedDate2 = new SimpleDateFormat("yyyy-MM-dd").format(date1);
+                query.append(" AND date >= '").append(formattedDate1).append("' AND date <= '").append(formattedDate2).append("';");
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        } else if (tokenizer.countTokens() == 2) {
+            try {
+                Date date1 = new SimpleDateFormat("dd/MM/yyyy").parse(tokenizer.nextToken());
+                String formattedDate1 = new SimpleDateFormat("yyyy-MM-dd").format(date1);
+                Date date2 = new SimpleDateFormat("dd/MM/yyyy").parse(tokenizer.nextToken());
+                date2.setTime(date2.getTime() + 86400000L);
+                String formattedDate2 = new SimpleDateFormat("yyyy-MM-dd").format(date2);
+                query.append(" AND date >= '").append(formattedDate1).append("' AND date <= '").append(formattedDate2).append("';");
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        } else {
+            return "";
+        }
+
+        return query.toString();
+    }
+
+    private void showEntityException(Exception e, String msg) {
+        String message = msg + " not added" + 
+                         "\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + e.getCause();
+        JOptionPane.showMessageDialog(null, message);
+    }
+
+    private void showSQLException(SQLException e) {
+        String message = e.getErrorCode() + "\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + "\n" + e.getCause();
+        JOptionPane.showMessageDialog(null, message);
+    }
+
+	public void insert(Work work) {
+		
+		throw new UnsupportedOperationException("Unimplemented method 'insert'");
 	}
-	
-	private void showEntityException(EntityException e, String msg) {
-		String message = msg + " not added" + 
-				"\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + e.getCause();
-			JOptionPane.showMessageDialog(null, message);
-	}
-	
-	private void showSQLException(SQLException e) {
-		String message = e.getErrorCode() + "\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + "\n" + e.getCause();
-		JOptionPane.showMessageDialog(null, message);
-	}
-	
 }

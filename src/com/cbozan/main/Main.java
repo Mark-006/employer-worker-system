@@ -12,7 +12,8 @@ public class Main {
     
     public static void main(String[] args) {
         
-        Locale.setDefault(new Locale("tr", "TR"));
+        Locale.setDefault(Locale.US);
+
 
         // Test database connection
         try (Connection conn = DB.getConnection()) {

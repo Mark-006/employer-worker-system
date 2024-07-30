@@ -1,6 +1,5 @@
 package com.cbozan.dao;
 
-
 import java.sql.Array;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -8,282 +7,136 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
+//import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map.Entry;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 
-import java.util.List;
-
 import com.cbozan.entity.Employer;
 import com.cbozan.entity.Employer.EmployerBuilder;
-import com.cbozan.exception.EntityException;
 
 public class EmployerDAO {
-	
-	private final HashMap<Integer, Employer> cache = new HashMap<>();
-	private boolean usingCache = true;
-	
-	private EmployerDAO() {list();}
 
-	public Employer findById(int id) {
-		
-		if(usingCache == false)
-			list();
-		
-		if(cache.containsKey(id))
-			return cache.get(id);
-		return null;
-	}
-	
-	
-	public List<Employer> list(){
-		
-		List<Employer> list = new ArrayList<>();
-		
-		if(cache.size() != 0 && usingCache) {
-			for(Entry<Integer, Employer> employer : cache.entrySet()) {
-				list.add(employer.getValue());
-			}
-			
-			return list;
-		}
-		
-		cache.clear();
-		
-		Connection conn;
-		Statement st;
-		ResultSet rs;
-		String query = "SELECT * FROM employer;";
-		
-		try {
-			conn = DB.getConnection();
-			st = conn.createStatement();
-			rs = st.executeQuery(query);
-			
-			EmployerBuilder builder;
-			Employer employer;
-			
-			while(rs.next()) {
-				
-				builder = new EmployerBuilder();
-				builder.setId(rs.getInt("id"));
-				builder.setFname(rs.getString("name"));
-				builder.setLname(rs.getString("surname"));
-				
-				if(rs.getArray("tel") == null)
-					builder.setTel(null);
-				else
-					builder.setTel(Arrays.asList((String [])rs.getArray("tel").getArray()));
-				
-				builder.setDescription(rs.getString("description"));
-				builder.setDate(rs.getTimestamp("date"));
-				
-				try {
-					
-					employer = builder.build();
-					list.add(employer);
-					cache.put(employer.getId(), employer);
-					
-				} catch (EntityException e) {
-					showEntityException(e, rs.getString("fname") + " " + rs.getString("lname"));
-				}
-				
-			}
-			
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return list;
-	}
-	
-	
-	public boolean create(Employer employer) {
-		
-		if(createControl(employer) == false)
-			return false;
-		
-		Connection conn;
-		PreparedStatement pst;
-		int result = 0;
-		String query = "INSERT INTO employer (fname,lname,tel,description) VALUES (?,?,?,?);";
-		String query2 = "SELECT * FROM employer ORDER BY id DESC LIMIT 1;";
-		
-		try {
-			conn = DB.getConnection();
-			pst = conn.prepareStatement(query);
-			pst.setString(1, employer.getFname());
-			pst.setString(2, employer.getLname());
-			
-			if(employer.getTel() == null)
-				pst.setArray(3, null);
-			else {
-				java.sql.Array phones = conn.createArrayOf("VARCHAR", employer.getTel().toArray());
-				pst.setArray(3, phones);
-			}
-			
-			pst.setString(4, employer.getDescription());
-			result = pst.executeUpdate();
-			
-			// adding cache
-			if(result != 0) {
-				
-				ResultSet rs = conn.createStatement().executeQuery(query2);
-				while(rs.next()) {
-					
-					EmployerBuilder builder = new EmployerBuilder();
-					builder.setId(rs.getInt("id"));
-					builder.setFname(rs.getString("fname"));
-					builder.setLname(rs.getString("lname"));
-					
-					if(rs.getArray("tel") == null)
-						builder.setTel(null);
-					else
-						builder.setTel(Arrays.asList((String [])rs.getArray("tel").getArray()));
-					
-					builder.setDescription(rs.getString("description"));
-					builder.setDate(rs.getTimestamp("date"));
-					
-					try {
-						
-						Employer emp = builder.build();
-						cache.put(emp.getId(), emp);
-						
-					} catch (EntityException e) {
-						showEntityException(e, rs.getString("fname") + " " + rs.getString("lname"));
-					}
-					
-				}
-				
-			}
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return result == 0 ? false : true;
-	}
-	
-	private boolean createControl(Employer employer) {
-		
-		for(Entry<Integer, Employer> obj : cache.entrySet()) {
-			if(obj.getValue().getFname().equals(employer.getFname())
-					&& obj.getValue().getLname().equals(employer.getLname())) {
-				
-				DB.ERROR_MESSAGE = obj.getValue().getFname() + " " + obj.getValue().getLname() + " registration already exists.";
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	
-	public boolean update(Employer employer) {
-		
-		if(updateControl(employer) == false)
-			return false;
-		
-		Connection conn;
-		PreparedStatement pst;
-		int result = 0;
-		String query = "UPDATE employer SET fname=?,"
-				+ "lname=?, tel=?, description=? WHERE id=?;";
-		
-		try {
-			conn = DB.getConnection();
-			pst = conn.prepareStatement(query);
-			pst.setString(1, employer.getFname());
-			pst.setString(2, employer.getLname());
-			
-			Array phones = conn.createArrayOf("VARCHAR", employer.getTel().toArray());
-			pst.setArray(3, phones);
-			
-			pst.setString(4, employer.getDescription());
-			pst.setInt(5, employer.getId());
-			
-			result = pst.executeUpdate();
-			
-			// update cache
-			if(result != 0) {
-				cache.put(employer.getId(), employer);
-			}
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return result == 0 ? false : true;
-	}
-	
-	private boolean updateControl(Employer employer) {
-		for(Entry<Integer, Employer> obj : cache.entrySet()) {
-			if(obj.getValue().getFname().equals(employer.getFname()) 
-					&& obj.getValue().getLname().equals(employer.getLname()) 
-					&& obj.getValue().getId() != employer.getId()) {
-				DB.ERROR_MESSAGE = obj.getValue().getFname() + " " + obj.getValue().getLname() + " registration already exists.";
-				return false;
-			}
-		}
-		return true;
-	}
-	
-	public boolean delete(Employer employer) {
-		
-		Connection conn;
-		PreparedStatement ps;
-		int result = 0;
-		String query = "DELETE FROM employer WHERE id=?;";
-		
-		try {
-			
-			conn = DB.getConnection();
-			ps = conn.prepareStatement(query);
-			ps.setInt(1, employer.getId());
-			result = ps.executeUpdate();
-			
-			if(result != 0) {
-				cache.remove(employer.getId());
-			}
+    private final Map<Integer, Employer> cache = new HashMap<>();
+    private boolean usingCache = true;
 
-			
-		} catch (SQLException e) {
-			showSQLException(e);
-		}
-		
-		return result == 0 ? false : true;
-		
-	}
-	
-	
-	public boolean isUsingCache() {
-		return this.usingCache;
-	}
-	
-	public void setUsingCache(boolean usingCache) {
-		this.usingCache = usingCache;
-	}
-	
-	private static class EmployerDAOHelper{
-		private static final EmployerDAO instance = new EmployerDAO();
-	}
-	
-	public static EmployerDAO getInstance() {
-		return EmployerDAOHelper.instance;
-	}
-	
-	private void showEntityException(EntityException e, String msg) {
-		String message = msg + " not added" + 
-				"\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + e.getCause();
-			JOptionPane.showMessageDialog(null, message);
-	}
-	
-	private void showSQLException(SQLException e) {
-		String message = e.getErrorCode() + "\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + "\n" + e.getCause();
-		JOptionPane.showMessageDialog(null, message);
-	}
-	
+    private EmployerDAO() {
+        list(); // Initialize cache on DAO creation
+    }
+
+    public Employer findById(int id) {
+        if (!usingCache) {
+            list(); // Refresh cache if not already using it
+        }
+        return cache.getOrDefault(id, null);
+    }
+
+
+    public List<Employer> list() {
+        List<Employer> list = new ArrayList<>();
+        cache.clear();
+    
+        String query = "SELECT employer_id, name, surname, description FROM employer"; // Simplified query for debugging
+    
+        try (Connection conn = DB.getConnection()) {
+            if (conn != null) {
+                System.out.println("Connection to database established.");
+    
+                try (Statement st = conn.createStatement();
+                     ResultSet rs = st.executeQuery(query)) {
+    
+                    //System.out.println("Fetching employers..."); just a test
+    
+                    while (rs.next()) {
+                        EmployerBuilder builder = new EmployerBuilder();
+                        builder.setEmployerId(rs.getInt("employer_id"));
+                        builder.setName(rs.getString("name"));
+                        builder.setSurname(rs.getString("surname"));
+                        builder.setDescription(rs.getString("description"));
+    
+                        // Bypass phonenumber for now
+                        builder.setPhoneNumber(null); // Set null or empty list as default
+    
+                        Employer employer = builder.build();
+                        list.add(employer);
+                        cache.put(employer.getEmployerId(), employer);
+    
+                        //System.out.println("Fetched employer: " + employer.getName() + " " + employer.getSurname()); another test
+                    }
+    
+                    //System.out.println("Total employers fetched: " + list.size());
+    
+                } catch (SQLException e) {
+                    System.err.println("Error executing query:");
+                    e.printStackTrace();
+                }
+            } else {
+                System.err.println("Failed to make database connection.");
+            }
+    
+        } catch (SQLException e) { 
+            System.err.println("Error connecting to database:");
+            e.printStackTrace();
+        }
+    
+        return list;
+    }
+
+
+    public boolean create(Employer employer) {
+        String insertQuery = "INSERT INTO employer (name, surname, phonenumber, description) VALUES (?, ?, ?, ?)";
+
+        try (Connection conn = DB.getConnection();
+             PreparedStatement pst = conn.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
+
+            pst.setString(1, employer.getName());
+            pst.setString(2, employer.getSurname());
+            // Convert phone numbers list to array or handle differently based on your database schema
+            pst.setArray(3, createSqlArray(conn, "VARCHAR", employer.getPhoneNumber()));
+            pst.setString(4, employer.getDescription());
+
+            int rowsAffected = pst.executeUpdate();
+            if (rowsAffected > 0) {
+                ResultSet generatedKeys = pst.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    int employerId = generatedKeys.getInt(1);
+                    employer.setEmployerId(employerId);
+                    cache.put(employerId, employer); // Update cache with new employer
+                }
+                return true;
+            }
+
+        } catch (SQLException e) {
+            showSQLException(e);
+        }
+
+        return false;
+    }
+
+    private Array createSqlArray(Connection conn, String type, List<String> elements) throws SQLException {
+        if (elements == null || elements.isEmpty()) {
+            return null;
+        }
+        return conn.createArrayOf(type, elements.toArray(new String[0]));
+    }
+
+    private void showSQLException(SQLException e) {
+        String message = e.getErrorCode() + "\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + "\n" + e.getCause();
+        JOptionPane.showMessageDialog(null, message);
+    }
+
+    public static EmployerDAO getInstance() {
+        return EmployerDAOHelper.instance;
+    }
+
+    private static class EmployerDAOHelper {
+        private static final EmployerDAO instance = new EmployerDAO();
+    }
+
+    // Placeholder method for future implementation
+    public boolean update(Employer selectedEmployer) {
+        throw new UnsupportedOperationException("Unimplemented method 'update'");
+    }
 }

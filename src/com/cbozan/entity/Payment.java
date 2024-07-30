@@ -130,6 +130,18 @@ public class Payment implements Serializable {
 				return new Payment(this);
 			return new Payment(id, worker, job, paytype, amount, date);
 		}
+        public void setWorkerId(int int1) {
+            
+            throw new UnsupportedOperationException("Unimplemented method 'setWorkerId'");
+        }
+        public void setJobId(int int1) {
+            
+            throw new UnsupportedOperationException("Unimplemented method 'setJobId'");
+        }
+        public void setPaytypeId(int int1) {
+            
+            throw new UnsupportedOperationException("Unimplemented method 'setPaytypeId'");
+        }
 	}
 
 	
@@ -224,6 +236,21 @@ public class Payment implements Serializable {
 		return Objects.equals(amount, other.amount) && Objects.equals(date, other.date) && id == other.id
 				&& Objects.equals(job, other.job) && Objects.equals(paytype, other.paytype)
 				&& Objects.equals(worker, other.worker);
-	}	
+	}
+
+    public int getWorkerId() {
+       
+        throw new UnsupportedOperationException("Unimplemented method 'getWorkerId'");
+    }
+
+    public int getJobId() {
+        
+        throw new UnsupportedOperationException("Unimplemented method 'getJobId'");
+    }
+
+    public int getPaytypeId() {
+      
+        throw new UnsupportedOperationException("Unimplemented method 'getPaytypeId'");
+    }	
 
 }

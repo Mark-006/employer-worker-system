@@ -4,12 +4,12 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import com.cbozan.model.User;
-import java.util.UUID;
+
 
 public class UserDAO {
 
     public void addUser(User user) {
-        String sql = "INSERT INTO \"users\" (unique_id, username, email, phone_number, password, role) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO users (unique_id, username, email, phone_number, password, role) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DB.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

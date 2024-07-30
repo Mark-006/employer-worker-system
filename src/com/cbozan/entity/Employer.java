@@ -1,220 +1,125 @@
 package com.cbozan.entity;
 
-import java.io.Serializable;
-import java.sql.Timestamp;
 import java.util.List;
 
-import com.cbozan.exception.EntityException;
-import com.cbozan.util.DBConst;
+public class Employer {
+    private int employer_id; // Primary key
+    private String name;
+    private String surname;
+    private List<String> phoneNumber;
+    private String description;
 
-import java.util.Objects;
+    // Constructor (private to force usage of Builder)
+    private Employer(int employer_id, String name, String surname, List<String> phoneNumber, String description) {
+        this.employer_id = employer_id;
+        this.name = name;
+        this.surname = surname;
+        this.phoneNumber = phoneNumber;
+        this.description = description;
+    }
 
-public final class Employer implements Serializable, Cloneable{
-	
-	private static final long serialVersionUID = -465227783930564456L;
-	
-	private int id;
-	private String fname;
-	private String lname;
-	private String business;
-	private String employer_name;
-	private List<String> tel;
-	private String description;
-	private Timestamp date;
-	
-	private Employer() {
-		this.id = 0;
-		this.fname = null;
-		this.lname = null;
-		this.tel = null;
-		this.description = null;
-		this.date = null;
-		this.employer_name = null;
-		this.business = null;
-	}
-	
-	private Employer(Employer.EmployerBuilder builder) throws EntityException {
-		super();
-		setId(builder.id);
-		setFname(builder.fname);
-		setLname(builder.lname); 
-		setTel(builder.tel);
-		setDescription(builder.description);
-		setDate(builder.date);
-	}
-	
-	
-	// Builder class
-	public static class EmployerBuilder{
-		
-		private int id;
-		private String fname;
-		private String lname;
-		private List<String> tel;
-		private String description;
-		private Timestamp date;
+    // Getters
+    public int getEmployerId() {
+        return employer_id;
+    }
 
-		public EmployerBuilder() {}
-		public EmployerBuilder(int id, String fname, String lname, List<String> tel, String description, Timestamp date) {
-			super();
-			this.id = id;
-			this.fname = fname;
-			this.lname = lname;
-			this.tel = tel;
-			this.description = description;
-			this.date = date;
-		}
+    public String getName() {
+        return name;
+    }
 
-		public EmployerBuilder setId(int id) {
-			this.id = id;
-			return this;
-		}
+    public String getSurname() {
+        return surname;
+    }
 
-		public EmployerBuilder setFname(String fname) {
-			this.fname = fname;
-			return this;
-		}
+    public List<String> getPhoneNumber() {
+        return phoneNumber;
+    }
 
-		public EmployerBuilder setLname(String lname) {
-			this.lname = lname;
-			return this;
-		}
+    public String getDescription() {
+        return description;
+    }
 
-		public EmployerBuilder setTel(List<String> tel) {
-			this.tel = tel;
-			return this;
-		}
+    // Builder class
+    public static class EmployerBuilder {
+        private int employer_id;
+        private String name;
+        private String surname;
+        private List<String> phoneNumber;
+        private String description;
 
-		public EmployerBuilder setDescription(String description) {
-			this.description = description;
-			return this;
-		}
+        public EmployerBuilder setEmployerId(int employer_id) {
+            this.employer_id = employer_id;
+            return this;
+        }
 
-		public EmployerBuilder setDate(Timestamp date) {
-			this.date = date;
-			return this;
-		}
-		
-		public Employer build() throws EntityException {
-			return new Employer(this);
-		}		
-		
-	}
-	
-	private static class EmptyInstanceSingleton{
-		private static final Employer instance = new Employer(); 
-	}
-	
-	public static final Employer getEmptyInstance() {
-		return EmptyInstanceSingleton.instance;
-	}
-	
-	
-	public int getId() {
-		return id;
-	}
+        public EmployerBuilder setName(String name) {
+            this.name = name;
+            return this;
+        }
 
-	public void setId(int id) throws EntityException {
-		if(id <= 0)
-			throw new EntityException("Employer ID negative or zero");
-		this.id = id;
-	}
+        public EmployerBuilder setSurname(String surname) {
+            this.surname = surname;
+            return this;
+        }
 
-	public String getFname() {
-		return fname;
-	}
+        public EmployerBuilder setPhoneNumber(List<String> phoneNumber) {
+            this.phoneNumber = phoneNumber;
+            return this;
+        }
 
-	public void setFname(String fname) throws EntityException {
-		if(fname.length() == 0 || fname.length() > DBConst.FNAME_LENGTH)
-			throw new EntityException("Employer name empty or too long");
-		this.fname = fname;
-	}
+        public EmployerBuilder setDescription(String description) {
+            this.description = description;
+            return this;
+        }
 
-	public String getLname() {
-		return lname;
-	}
+        public Employer build() {
+            return new Employer(employer_id, name, surname, phoneNumber, description);
+        }
+    }
 
-	public void setLname(String lname) throws EntityException {
-		if(lname.length() == 0 || lname.length() > DBConst.LNAME_LENGTH)
-			throw new EntityException("Employer last name empty or too long");
-		this.lname = lname;
-	}
-	public String getBusiness() {
-		return business;
-	}
+    // Setters (needed for update functionality)
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setBusiness(String business) throws EntityException {
-		if(business.length() == 0 || business.length() > DBConst.LNAME_LENGTH)
-			throw new EntityException("business name empty or too long");
-		this.business = business;
-	}
-    public String getEmployer_name() {
-		return employer_name;
-	}
+    public void setEmployerId(int employer_id) {
+        this.employer_id = employer_id;
+    }
 
-	public void setEmployer_name(String employer_name) throws EntityException {
-		if(employer_name.length() == 0 || employer_name.length() > DBConst.LNAME_LENGTH)
-			throw new EntityException("Employername empty or too long");
-		this.employer_name = employer_name;
-	}
-	
-	public List<String> getTel() {
-		return tel;
-	}
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
 
-	public void setTel(List<String> tel) {
-		this.tel = tel;
-	}
+    public void setPhoneNumber(List<String> phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    // Additional methods
+    public String getFname() {
+        return name;
+    }
 
-	public Timestamp getDate() {
-		return date;
-	}
+    public String getLname() {
+        return surname;
+    }
 
-	public void setDate(Timestamp date) {
-		this.date = date;
-	}
+    public void setFname(String fname) {
+        this.name = fname;
+    }
 
-	@Override
-	public String toString() {
-		return getFname() + " " + getLname();
-	}
+    public void setLname(String lname) {
+        this.surname = lname;
+    }
 
-	@Override
-	public int hashCode() {
-		return Objects.hash(date, description, fname, id, lname, tel);
-	}
+    public List<String> getTel() {
+        return phoneNumber;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Employer other = (Employer) obj;
-		return Objects.equals(date, other.date) && Objects.equals(description, other.description)
-				&& Objects.equals(fname, other.fname) && id == other.id && Objects.equals(lname, other.lname)
-				&& Objects.equals(tel, other.tel);
-	}
-	
-	@Override
-	public Employer clone(){
-		// TODO Auto-generated method stub
-		try {
-			return (Employer) super.clone();
-		} catch (CloneNotSupportedException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-	
+    public void setTel(List<String> phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
 }

@@ -18,7 +18,10 @@ public class DB {
     public static Connection getConnection() {
         return DBHelper.CONNECTION.connect();
     }
-
+    public interface Observer {
+        void update(Object obj);  // Define your update method signature
+    }
+    
     public static void destroyConnection() {
         DBHelper.CONNECTION.disconnect();
     }
@@ -30,8 +33,8 @@ public class DB {
             if (conn == null || conn.isClosed()) {
                 // Database connection properties
                 Properties props = new Properties();
-                props.setProperty("user", "postgres");       
-                props.setProperty("password", "Mark1234");   
+                props.setProperty("user", "mark");       
+                props.setProperty("password", "mark123");   
                 props.setProperty("encoding", "UTF8");
 
                 // PostgreSQL JDBC URL

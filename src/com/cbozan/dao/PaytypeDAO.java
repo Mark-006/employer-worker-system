@@ -21,13 +21,23 @@ public class PaytypeDAO {
 	private final HashMap<Integer, Paytype> cache = new HashMap<>();
 	private boolean usingCache = true;
 	
-	private PaytypeDAO() {list();}
+	private PaytypeDAO() {try {
+		list();
+	} catch (EntityException e) {
+		
+		e.printStackTrace();
+	}}
 	
 	// Read by id
 	public Paytype findById(int id) {
 		
 		if(usingCache == false)
-			list();
+			try {
+				list();
+			} catch (EntityException e) {
+				
+				e.printStackTrace();
+			}
 		
 		if(cache.containsKey(id))
 			return cache.get(id);
@@ -37,7 +47,7 @@ public class PaytypeDAO {
 	
 	
 	//Read All
-	public List<Paytype> list(){
+	public List<Paytype> list() throws EntityException{
 		
 		List<Paytype> list = new ArrayList<>();
 		
@@ -70,13 +80,9 @@ public class PaytypeDAO {
 				builder.setTitle(rs.getString("title"));
 				builder.setDate(rs.getTimestamp("date"));
 				
-				try {
-					paytype = builder.build();
-					list.add(paytype);
-					cache.put(paytype.getId(), paytype);
-				} catch (EntityException e) {
-					showEntityException(e, "ID : " + rs.getInt("id") + " Title : " + rs.getString("title"));
-				}
+				paytype = builder.build();
+				list.add(paytype);
+				cache.put(paytype.getId(), paytype);
 				
 			}
 			
@@ -88,7 +94,7 @@ public class PaytypeDAO {
 	}
 	
 	
-	public boolean create(Paytype paytype) {
+	public boolean create(Paytype paytype) throws EntityException {
 		
 		if(createControl(paytype) == false)
 			return false;
@@ -116,12 +122,8 @@ public class PaytypeDAO {
 					builder.setTitle(rs.getString("title"));
 					builder.setDate(rs.getTimestamp("date"));
 					
-					try {
-						Paytype pt = builder.build();
-						cache.put(pt.getId(), pt);
-					} catch (EntityException e) {
-						showEntityException(e, "ID : " + rs.getInt("id") + " Title : " + rs.getString("title"));
-					}
+					Paytype pt = builder.build();
+					cache.put(pt.getId(), pt);
 					
 				}
 				
@@ -137,7 +139,7 @@ public class PaytypeDAO {
 	private boolean createControl(Paytype paytype) {
 		for(Entry<Integer, Paytype> obj : cache.entrySet()) {
 			if(obj.getValue().getTitle().equals(paytype.getTitle())) {
-				DB.ERROR_MESSAGE = obj.getValue().getTitle() + " kaydı zaten mevcut.";
+				DB.ERROR_MESSAGE = obj.getValue().getTitle() + " registration already exists.";
 				return false;
 			}
 		}
@@ -176,7 +178,7 @@ public class PaytypeDAO {
 	private boolean updateControl(Paytype paytype) {
 		for(Entry<Integer, Paytype> obj : cache.entrySet()) {
 			if(obj.getValue().getTitle().equals(paytype.getTitle()) && obj.getValue().getId() != paytype.getId()) {
-				DB.ERROR_MESSAGE = obj.getValue().getTitle() + " kaydı zaten mevcut.";
+				DB.ERROR_MESSAGE = obj.getValue().getTitle() + " registration already exists.";
 				return false;
 			}
 		}
@@ -228,6 +230,7 @@ public class PaytypeDAO {
 		this.usingCache = usingCache;
 	}
 	
+	@SuppressWarnings("unused")
 	private void showEntityException(EntityException e, String msg) {
 		String message = msg + " not added" + 
 				"\n" + e.getMessage() + "\n" + e.getLocalizedMessage() + e.getCause();

@@ -21,10 +21,10 @@ public class Paytype implements Serializable {
     }
 
     // Constructor using the builder pattern
-    private Paytype(PaytypeBuilder builder) throws EntityException {
-        setId(builder.id);
-        setTitle(builder.title);
-        setDate(builder.date);
+    private Paytype(PaytypeBuilder builder) {
+        this.id = builder.id;
+        this.title = builder.title;
+        this.date = builder.date;
     }
 
     // Builder class
@@ -36,11 +36,17 @@ public class Paytype implements Serializable {
         public PaytypeBuilder() {}
 
         public PaytypeBuilder setId(int id) {
+            if (id <= 0) {
+                throw new IllegalArgumentException("Paytype ID cannot be negative or zero");
+            }
             this.id = id;
             return this;
         }
 
         public PaytypeBuilder setTitle(String title) {
+            if (title == null || title.isEmpty()) {
+                throw new IllegalArgumentException("Paytype title cannot be null or empty");
+            }
             this.title = title;
             return this;
         }
@@ -50,7 +56,13 @@ public class Paytype implements Serializable {
             return this;
         }
 
-        public Paytype build() throws EntityException {
+        public Paytype build() {
+            if (this.id <= 0) {
+                throw new IllegalArgumentException("Paytype ID cannot be negative or zero");
+            }
+            if (this.title == null || this.title.isEmpty()) {
+                throw new IllegalArgumentException("Paytype title cannot be null or empty");
+            }
             return new Paytype(this);
         }
     }
@@ -91,6 +103,11 @@ public class Paytype implements Serializable {
 
     public void setDate(Timestamp date) {
         this.date = date;
+    }
+
+    // Method to get the name (assuming name is based on title)
+    public String getName() {
+        return getTitle(); // Assuming title represents the name of the Paytype
     }
 
     // toString, hashCode, equals methods

@@ -33,6 +33,9 @@ DriverManager.getConnection("jdbc:postgresql://localhost:5432/db", "postgres", "
 ```
 ---
 to run java -cp "src;libs/postgresql-42.7.3.jar" com.cbozan.main.Main
+
+```
+
 **And finally, in order not to get a database error, you should add the following tables to the database:**
 ```
 CREATE TABLE admin(id smallserial primary key not null, username varchar, password varchar);
